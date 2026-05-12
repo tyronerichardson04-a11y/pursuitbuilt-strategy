@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PursuitBuilt — Social Strategy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { background: #0a0a0a; min-height: 100vh; font-family: 'DM Sans', sans-serif; color: #f0f0f0; padding-bottom: 60px; }
+    button { font-family: inherit; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ─── COLORS ───────────────────────────────────────────────────────────────────
+var C = {
+  bg:'#0a0a0a', surface:'#111111', card:'#161616', border:'#2a2a2a',
+  red:'#C41E3A', redGlow:'rgba(196,30,58,0.12)',
+  text:'#f0f0f0', muted:'#888', accent:'#ff6b6b',
+  green:'#4caf50', yellow:'#f0a500', purple:'#a855f7', blue:'#3b82f6'
+};
+
+var PC = {
+  'Brand Launch':C.red, 'The Planner':'#f0a500', 'Brand Identity':C.red,
+  'Build Vision':'#3b82f6', 'Build Journey':'#4caf50',
+  'AI Glasses':'#a855f7', '3D Printing':'#06b6d4',
+  'The Boys':'#ec4899', 'Community':'#f0a500'
+};
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+var calendarData = [
+  {
+    month:1, title:'Plant the Flag',
+    theme:'Establish the vision and brand before anything else exists.',
+    weeks:[
+      {week:1,track:'Brand',pillar:'Brand Launch',post:'The Vision',type:'Image + YT Short',desc:'AI render. Two lines. One hashtag. Post tonight.',status:'ready'},
+      {week:2,track:'Brand',pillar:'The Planner',post:'The Teaser',type:'Talking Head',desc:'Filmed with teleprompter. Caption is the script. Hint at the planner without revealing it.',status:'film'},
+      {week:3,track:'Brand',pillar:'Brand Identity',post:'The Mission Statement',type:'Talking Head + YT Trailer',desc:'Your most important piece of content. Pin as YouTube channel trailer. Caption doubles as script.',status:'film'},
+      {week:4,track:'Glasses',pillar:'AI Glasses',post:'Glasses — The Concept',type:'Talking Head + YT',desc:"Month 1 glasses video. What you're building and why. Plant the seed for the tech crowd.",status:'film'}
+    ]
+  },
+  {
+    month:2, title:'Build the Community',
+    theme:'Turn followers into collaborators. The planner becomes the community engine.',
+    weeks:[
+      {week:1,track:'Planner',pillar:'The Planner',post:'The Credibility Post',type:'Carousel + YT Walkthrough',desc:"Full planner reveal. Carousel for IG, 5-7 min walkthrough for YouTube. End with: 'What phase would you start with?'",status:'film'},
+      {week:2,track:'Brand',pillar:'Build Vision',post:'The Brightness Ceiling',type:'Image + YT Short',desc:"Planned collab with ICLN CAT — local Charger owner who inspired the color direction. Reach out: 'Hey — I'm building a 2019 Charger Pursuit and your car was my color inspiration. I'm doing a video on the color direction and would love to give you credit in person if you're open to it. No pressure either way.' Stand next to both cars. His Torred = the ceiling. Our vampire red = darker.",status:'ready'},
+      {week:3,track:'Planner',pillar:'The Planner',post:'Would You Change This? — Vol. 1',type:'Carousel + Community Post',desc:'Screenshot Phase 1 from planner. Ask audience: what would you swap? First true community engagement post.',status:'plan'},
+      {week:4,track:'Glasses',pillar:'AI Glasses',post:'Glasses — Component Sourcing',type:'Talking Head + YT',desc:'Month 2 glasses video. What goes inside. Camera module, mic, processing. Tech crowd will geek out.',status:'film'}
+    ]
+  },
+  {
+    month:3, title:'The Hunt',
+    theme:'Actively searching for the car. Document everything. Make the audience part of the search.',
+    weeks:[
+      {week:1,track:'Build',pillar:'Build Journey',post:'The Hunt Begins',type:'Talking Head + Auction footage',desc:"Search is on. Walk through criteria, budget, what you're looking for. Ask: what would you look for?",status:'event'},
+      {week:2,track:'Planner',pillar:'The Planner',post:'Budget Reveal — The Full Picture',type:'Talking Head + Graphic',desc:'Planner mode: TEACH. Full budget breakdown across all phases. Every scenario. Total transparency.',status:'film'},
+      {week:3,track:'Build',pillar:'Build Journey',post:'Auction Deep Dive',type:'Screen Record + Talking Head',desc:"Screen record the actual listings. Talk through what you're seeing. Real and documentary-style.",status:'event'},
+      {week:4,track:'Glasses',pillar:'AI Glasses',post:'Glasses — SolidWorks Design',type:'Screen Record + YT',desc:'Month 3 glasses video. SolidWorks walkthrough. How Claude helped with the design. The meta moment.',status:'film'}
+    ]
+  },
+  {
+    month:4, title:'Build Anticipation',
+    theme:"Car is getting closer. Audience is invested. Deepen the community and keep both tracks moving.",
+    weeks:[
+      {week:1,track:'Planner',pillar:'The Planner',post:'Would You Change This? — Vol. 2',type:'Carousel + Community Post',desc:'Planner mode: INVITE. Phase 2 or 3 this time. Audience has opinions by now — lean into it.',status:'plan'},
+      {week:2,track:'Brand',pillar:'Build Vision',post:'Color Reveal',type:'Talking Head + Reel',desc:'Vampire Red satin reveal. Reference the brightness ceiling post. Story of why this color. The jeans at age 7 detail.',status:'film'},
+      {week:3,track:'Build',pillar:'Build Journey',post:'The Search Update',type:'Talking Head',desc:"Where things stand on the car search. Honest update. What you've seen, what you've passed on, what you're waiting for.",status:'event'},
+      {week:4,track:'Glasses',pillar:'AI Glasses',post:'Glasses — First Print',type:'Time-lapse + Talking Head + YT',desc:'Month 4 glasses video. First 3D print. What worked, what failed, what changes next. Print failure content performs.',status:'film'}
+    ]
+  },
+  {
+    month:5, title:'Convergence',
+    theme:'Both builds closing in. Tension builds. Audience senses something big is coming.',
+    weeks:[
+      {week:1,track:'Planner',pillar:'The Planner',post:'Final Planner Review',type:'Talking Head + Screen',desc:"Planner mode: REVEAL. Walk through the full plan one more time before the car arrives. 'This is what we said. Let's see what happens.'",status:'film'},
+      {week:2,track:'Build',pillar:'Build Journey',post:'The Boys — Build Teaser',type:'Short Reel',desc:'First post featuring the sons. Casual. Real. Hyping them up for when the car comes. No script — just genuine.',status:'film'},
+      {week:3,track:'Build',pillar:'Community',post:'What Would You Fix First?',type:'Graphic + Poll',desc:'Show the baseline condition you expect the car to be in. Poll the audience on where to start. Sets up Day 1 reveal.',status:'plan'},
+      {week:4,track:'Glasses',pillar:'AI Glasses',post:'Glasses — Assembly',type:'Talking Head + YT',desc:'Month 5 glasses video. Components going in. Starting to look like something real. Build the anticipation.',status:'film'}
+    ]
+  },
+  {
+    month:6, title:'The Moment',
+    theme:"Car arrives. Glasses are ready. Everything converges. The audience that's been waiting finally gets the payoff.",
+    weeks:[
+      {week:'Purchase Day',track:'Build',pillar:'Build Journey',post:'🚨 Day 1 — Raw Reveal',type:'60-sec Reel + Full YT Episode',desc:'SHOT LIST: exterior walk-around, every flaw, interior, plastic seat, auction sticker, odometer, VIN, sons sitting in it first time. Do NOT clean it first. Most important footage you will ever shoot.',status:'event'},
+      {week:'Days after',track:'Build',pillar:'Build Journey',post:'The Baseline Scan',type:'Carousel + Talking Head YT',desc:"Everything wrong. No sugar coating. Ends with: 'What would you fix first?' — ties back to Month 5 poll.",status:'event'},
+      {week:'Same week',track:'Glasses',pillar:'AI Glasses',post:'🚨 Glasses — First Garage Test',type:'Dedicated Video — Multiple Angles',desc:'Month 6 glasses video. THE moment. Voice into mic → AI searches → planner updates on screen. Boys present. Tablet visible. Shoot this deliberately — this is the 1M view video.',status:'event'},
+      {week:'End of month',track:'Planner',pillar:'The Planner',post:'Plan vs. Reality — The Beginning',type:'Talking Head + Screen',desc:'Day 1 reality vs. what the planner projected. First of many. Sets the tone for the entire build transparency series.',status:'event'}
+    ]
+  }
+];
+
+var launchSequence = [
+  {
+    post:1, title:'The Vision', pillar:'Brand Launch',
+    platform:'Instagram + YouTube Short', type:'Image — AI Render', tone:'Short & Punchy', timing:'Post Now',
+    caption:"This doesn't exist yet.\n\nBut it will.\n\n#PursuitBuilt",
+    youtube:'Post same image as YouTube Short with text overlay. No editing needed. Plants the flag on both platforms day one.',
+    notes:'AI render only. No context. Let people wonder. Minimal hashtags intentional — mystique over reach on post 1.'
+  },
+  {
+    post:2, title:'The Teaser', pillar:'The Planner',
+    platform:'Instagram + YouTube Short', type:'Talking Head — Teleprompter', tone:'Conversational', timing:'Week 1',
+    caption:"Before I buy the car, I built something.\n\nA tool to plan the entire build — every phase, every part, every dollar.\n\nMost people wing it. I wanted to know exactly what I was getting into before I spent a dime.\n\nMore on this soon.\n\n#PursuitBuilt #CarBuild #DodgeCharger",
+    youtube:'Film as talking head with teleprompter. Caption IS the script. Descript extract for Short. Cut to planner screenshot at end.',
+    notes:"Don't reveal the full planner yet. Just enough to create curiosity. Your first teleprompter delivery — clean, confident, on-message."
+  },
+  {
+    post:3, title:'The Mission', pillar:'Brand Identity',
+    platform:'Instagram + YouTube', type:'Talking Head — Teleprompter', tone:'Conversational & Real', timing:'Week 1-2',
+    caption:"Normal guys can build something that can't be bought.\n\nThat's what this is about.\n\nI bought a retired police car at auction. No shop. No sponsor. No shortcuts. Just the work, the budget on the table, and my sons watching every step.\n\nPursuitBuilt isn't a brand. It's a movement for every person who looked at their dream car and thought — maybe someday.\n\nSomeday starts now.\n\n#PursuitBuilt #NormalGuys #CarBuild #DodgeCharger #GarageBuilt",
+    youtube:'This becomes your YouTube channel trailer. Pin it. 90 seconds max. Caption is the full script.',
+    notes:"Most important caption you'll write. Pin as YouTube channel trailer. Mention the sons — that detail connects deeply."
+  },
+  {
+    post:4, title:'The Credibility Post', pillar:'The Planner',
+    platform:'Instagram + YouTube', type:'Carousel (IG) + Walkthrough Video (YT)', tone:'Detailed & Informative', timing:'Week 2',
+    caption:"I built a full repair and build planner before I bought this car.\n\nPhase tracking. Parts lists. Labor estimates. Budget scenarios. Order status.\n\nSlide through 👉\n\nEvery decision you're about to watch me make — it's already been mapped out. And I'll show you when the plan meets reality.\n\nWhat phase would you start with? Drop it below.\n\n#PursuitBuilt #CarBuildPlanner #DodgeCharger #GarageBuilt #BudgetBuild",
+    youtube:'Film a 5-7 min screen walkthrough with talking head intro. Descript pulls highlights for a Short teaser.',
+    notes:"Community engine post. Makes people feel like collaborators. Planner is already live — drop the link when engagement peaks, not before."
+  },
+  {
+    post:5, title:'The Brightness Ceiling', pillar:'Build Vision',
+    platform:'Instagram + YouTube Short', type:'Image + Short talking head', tone:'Short & Punchy', timing:'Week 2-3',
+    caption:"This is beautiful.\n\nThis is also the ceiling.\n\nWe're going darker.\n\n#PursuitBuilt #DodgeCharger #SatinRed #WrapLife",
+    youtube:'15-second Short: show the ICLN CAT photo, say the three lines to camera. No editing needed beyond a cut.',
+    notes:"Use the ICLN CAT reference photo. Don't explain the color yet. Save the vampire red reveal for Month 4."
+  },
+  {
+    post:6, title:'The Hunt Begins', pillar:'Build Journey',
+    platform:'Instagram + YouTube', type:'Talking Head + Auction footage', tone:'Conversational', timing:'Month 3',
+    caption:"The search is on.\n\nPolice auctions. Fleet sales. Dealer lots. Running through every option to find the right 2019 Charger Pursuit.\n\nHere's what I'm looking for and what I'm willing to spend 👇\n\n[Brief criteria list]\n\nIf you've bought at auction before — what do you wish you knew?\n\n#PursuitBuilt #PoliceAuction #DodgeCharger #ProjectCar #GovPlanet",
+    youtube:'Screen record the auction research. Documentary-style. Descript clips the best moments for Shorts.',
+    notes:"First true community engagement post. Asking for advice generates real comments from people who've done this."
+  },
+  {
+    post:7, title:'Day 1 — Raw Reveal', pillar:'Build Journey',
+    platform:'Instagram Reel + YouTube Full Episode', type:'60-sec Reel (IG) + 8-10 min Episode (YT)', tone:'Conversational & Real', timing:'Month 6 — Purchase Day',
+    caption:"She's home.\n\nPolice interceptor. Auction sticker still on the window. Smells like a government vehicle. Plastic seat in the back.\n\nThis is the starting point.\n\nRemember Post 1? That render? That's where we're going.\n\nThis is where we begin.\n\n#PursuitBuilt #DodgeCharger #ProjectCar #Day1 #PoliceInterceptor #GarageBuilt",
+    youtube:"Full episode. Descript extracts 3-4 Shorts automatically. The 60-sec Reel is just the best Descript clip.",
+    notes:"SHOT LIST: exterior walk-around every flaw, interior, plastic seat, auction sticker, odometer, VIN tag, sons sitting in it first time. Do NOT clean it first."
+  },
+  {
+    post:8, title:'The Baseline Scan', pillar:'Build Journey',
+    platform:'Instagram + YouTube', type:'Carousel (IG) + Talking Head (YT)', tone:'Detailed & Informative', timing:'Days after Day 1',
+    caption:"Here's everything wrong with it. Every single thing.\n\nNo sugar coating. This is the baseline.\n\nSlide through 👉\n\nThe planner already has Phase 1 mapped out. Some of this was expected. Some of it... wasn't.\n\nWhat would you fix first?\n\n#PursuitBuilt #DodgeCharger #ProjectCar #HonestBuild #BudgetBuild",
+    youtube:'Reference the planner on screen. Descript clips the most surprising finds for Shorts.',
+    notes:"Ties back to Month 5 poll. Comments here shape Phase 1 — tell the audience that. Gives them ownership."
+  },
+  {
+    post:9, title:'The Hero Moment', pillar:'AI Glasses',
+    platform:'Instagram + YouTube', type:'Multi-angle Dedicated Video', tone:'Conversational & Real', timing:'Month 6 — Glasses ready',
+    caption:"I built the glasses.\n\nI built the planner.\n\nI bought the car.\n\nThis is what it looks like when all three work together for the first time.\n\n#PursuitBuilt #AIGlasses #SmartGlasses #GarageAI #DodgeCharger",
+    youtube:'THE moment. Multiple angles. Voice into mic → AI searches → planner updates on screen in real time. Boys present if possible. Tablet visible in background. Shoot this deliberately — this is the 1M view video.',
+    notes:"Do NOT capture this accidentally as B-roll. Plan the shot. Multiple angles. This is the convergence moment the entire 6-month arc has been building toward."
+  },
+  {
+    post:10, title:'Plan vs. Reality — Vol. 1', pillar:'The Planner',
+    platform:'Instagram + YouTube', type:'Split Image (IG) + Teleprompter recap (YT)', tone:'Mix', timing:'After Phase 1',
+    caption:"The plan said $340. Reality said hold my beer.\n\nHere's what Phase 1 actually cost vs. what I projected 👉\n\nThis is why I built the planner. Not to be right — to know exactly how wrong I was and why.\n\nBudget transparency is the whole point.\n\n#PursuitBuilt #PlanVsReality #BudgetBuild #DodgeCharger #HonestBuild",
+    youtube:'Teleprompter recap. Planner on screen — projected vs. actual side by side. Recurring segment after every phase.',
+    notes:'Most-shared content type. Real numbers build deep trust. The planner on screen gives it credibility no other channel can replicate.'
+  }
+];
+
+var pipeline = {
+  steps:[
+    {step:1,label:'SHOOT',detail:'Camera + lighting + teleprompter for talking heads. Phone handheld for garage/car footage.',icon:'🎥'},
+    {step:2,label:'DESCRIPT',detail:'Edit long-form. AI highlight extraction pulls the best moments automatically.',icon:'✂️'},
+    {step:3,label:'YOUTUBE',detail:'Full episode uploaded. Source of truth for all content.',icon:'▶️'},
+    {step:4,label:'SHORTS',detail:'Descript-extracted clips posted as YouTube Shorts same week.',icon:'⚡'},
+    {step:5,label:'REELS',detail:'Same clips reposted to Instagram Reels. Caption already written. Zero extra work.',icon:'📱'}
+  ],
+  repurpose:[
+    {source:'Talking Head Video',ig:'60-sec Reel (best Descript clip)',yt:'Full episode + Shorts',effort:'Low'},
+    {source:'Carousel Post',ig:'Carousel with CTA',yt:'Screen walkthrough video',effort:'Medium'},
+    {source:'Garage Footage',ig:'Raw Reel',yt:'B-roll in full episode',effort:'None'},
+    {source:'Plan vs. Reality',ig:'Split image post',yt:'Teleprompter recap segment',effort:'Low'},
+    {source:'3D Print',ig:'Time-lapse Reel',yt:'Short + episode segment',effort:'Low'}
+  ]
+};
+
+var pillars = [
+  {name:'Build Journey',description:'Phase updates, repairs, parts arriving, things going wrong. Phone footage. Raw and real.'},
+  {name:'Budget Transparency',description:'Running totals, real numbers, trade-offs, what got cut. The numbers other channels hide.'},
+  {name:'The Planner',description:'Teach, Invite, Reveal. One planner post per month minimum. Your community engine.'},
+  {name:'AI Glasses',description:'One dedicated YouTube video per month. Fixed week. Builds a loyal tech sub-audience.'},
+  {name:'3D Printing',description:'Time-lapses, custom parts, before/after. Short-form gold whenever relevant.'},
+  {name:'The Boys',description:'Milestone moments, reaction shots, sons in the build. The posts people share.'},
+  {name:'Brand Identity',description:'Mission posts, wins vs. reality, community moments. The spine everything hangs on.'}
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var activeTab = 'calendar';
+var expandedMonth = 0;
+var expandedPost = null;
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function trackColor(t) {
+  return t==='Glasses'?C.purple:t==='Planner'?C.yellow:t==='Brand'?C.red:C.green;
+}
+function statusColor(s) {
+  return s==='ready'?C.green:s==='film'?C.yellow:s==='event'?C.purple:C.muted;
+}
+function statusLabel(s) {
+  return s==='ready'?'Ready Now':s==='film'?'Film This':s==='event'?'Event-Triggered':'Plan Ahead';
+}
+function platColor(p) {
+  return p&&p.indexOf('YouTube')!==-1&&p.indexOf('IG')!==-1?'#a855f7':p&&p.indexOf('YouTube')!==-1?'#ff4444':'#e1306c';
+}
+function pillarColor(p) { return PC[p]||C.red; }
+
+function tag(text, color) {
+  var bg = color ? color+'22' : C.redGlow;
+  var border = color ? color+'55' : C.red+'44';
+  var col = color || C.accent;
+  return '<span style="background:'+bg+';border:1px solid '+border+';color:'+col+';padding:2px 8px;border-radius:3px;font-size:11px;font-family:\'DM Mono\',monospace;letter-spacing:0.04em;white-space:nowrap;">'+esc(text)+'</span>';
+}
+
+function sectionLabel(text, color) {
+  return '<div style="font-size:11px;font-family:\'DM Mono\',monospace;color:'+(color||C.muted)+';letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase;">'+esc(text)+'</div>';
+}
+
+// ─── RENDER: HEADER ───────────────────────────────────────────────────────────
+function renderHeader() {
+  return '<div style="border-bottom:1px solid '+C.border+';padding:28px 24px 20px;background:linear-gradient(180deg,#1a0508 0%,#0a0a0a 100%);position:relative;overflow:hidden;">'
+    +'<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,'+C.redGlow+' 0%,transparent 60%);pointer-events:none;"></div>'
+    +'<div style="position:relative;">'
+    +'<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:'+C.red+';letter-spacing:0.2em;margin-bottom:6px;text-transform:uppercase;">Social Strategy — v3</div>'
+    +'<h1 style="margin:0;font-size:clamp(26px,5vw,38px);font-weight:800;letter-spacing:-0.03em;line-height:1.1;">PURSUIT<span style="color:'+C.red+';">BUILT</span></h1>'
+    +'<p style="margin:6px 0 10px;color:'+C.muted+';font-size:13px;font-style:italic;">“Normal guys can build something that can’t be bought.”</p>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+    +tag('Instagram','#e1306c')
+    +tag('YouTube','#ff4444')
+    +tag('AI Glasses Track',C.purple)
+    +tag('Planner Track',C.yellow)
+    +'</div></div></div>';
+}
+
+// ─── RENDER: TABS ─────────────────────────────────────────────────────────────
+function renderTabs() {
+  var tabs = [
+    {id:'calendar',label:'6-Month Calendar'},
+    {id:'sequence',label:'Launch Sequence'},
+    {id:'pipeline',label:'Production Pipeline'},
+    {id:'pillars',label:'Content Pillars'}
+  ];
+  var html = '<div style="display:flex;border-bottom:1px solid '+C.border+';padding:0 16px;overflow-x:auto;">';
+  tabs.forEach(function(t) {
+    var active = activeTab === t.id;
+    html += '<button onclick="switchTab(\''+t.id+'\')" style="'
+      +'background:none;border:none;'
+      +'border-bottom:'+(active?'2px solid '+C.red:'2px solid transparent')+';'
+      +'color:'+(active?C.text:C.muted)+';'
+      +'padding:14px 16px 12px;font-size:13px;'
+      +'font-weight:'+(active?700:400)+';'
+      +'cursor:pointer;font-family:\'DM Sans\',sans-serif;'
+      +'white-space:nowrap;transition:color 0.2s;'
+      +'">'+esc(t.label)+'</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ─── RENDER: CALENDAR ─────────────────────────────────────────────────────────
+function renderCalendar() {
+  var html = '<div>';
+  html += '<p style="color:'+C.muted+';font-size:13px;margin:0 0 8px;line-height:1.6;">Two parallel builds. One channel. Car purchase is the convergence point.</p>';
+
+  // Legend
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;">';
+  [{label:'Car Build',color:C.green},{label:'AI Glasses',color:C.purple},{label:'Planner',color:C.yellow},{label:'Brand',color:C.red}].forEach(function(l) {
+    html += '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:'+C.muted+';">'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:'+l.color+';flex-shrink:0;"></div>'
+      +esc(l.label)+'</div>';
+  });
+  html += '<div style="margin-left:auto;display:flex;gap:8px;">';
+  [{s:'ready',l:'Ready'},{s:'film',l:'Film'},{s:'event',l:'Triggered'}].forEach(function(s) {
+    html += '<div style="font-size:11px;font-family:\'DM Mono\',monospace;color:'+statusColor(s.s)+'">● '+s.l+'</div>';
+  });
+  html += '</div></div>';
+
+  // Month cards
+  calendarData.forEach(function(month, mi) {
+    html += renderMonthCard(month, mi);
+  });
+
+  // Planner Cadence
+  html += '<div style="margin-top:20px;background:'+C.card+';border:1px solid '+C.border+';border-radius:8px;padding:16px;">'
+    +sectionLabel('Planner Deep Dive — 3 Modes', C.yellow)
+    +'<p style="margin:0 0 12px;font-size:13px;color:#ccc;line-height:1.6;">One planner post per month minimum. Rotate through these three modes so it never gets repetitive:</p>';
+  [{mode:'TEACH',desc:"Here's how the planner works, here's how I built it, here's what a phase looks like.",months:'Months 1-2'},
+   {mode:'INVITE',desc:"What would you change? What phase would you start with? Let the audience shape the build.",months:'Months 2-4'},
+   {mode:'REVEAL',desc:"Here's what the plan said. Here's what actually happened. No hiding the numbers.",months:'Months 5-6+'}
+  ].forEach(function(m) {
+    html += '<div style="display:flex;gap:12px;padding:10px 0;border-top:1px solid '+C.border+';">'
+      +'<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:'+C.yellow+';width:52px;flex-shrink:0;padding-top:2px;">'+m.mode+'</div>'
+      +'<div style="flex:1;font-size:13px;color:#ccc;line-height:1.5;">'+esc(m.desc)+'</div>'
+      +'<div style="font-size:11px;font-family:\'DM Mono\',monospace;color:'+C.muted+';white-space:nowrap;">'+m.months+'</div>'
+      +'</div>';
+  });
+  html += '</div>';
+
+  // Glasses Cadence
+  html += '<div style="margin-top:12px;background:'+C.card+';border:1px solid '+C.border+';border-radius:8px;padding:16px;">'
+    +sectionLabel('AI Glasses — Monthly Video Schedule', C.purple)
+    +'<p style="margin:0 0 12px;font-size:13px;color:#ccc;line-height:1.6;">One dedicated YouTube video per month, same week each month. Builds a loyal tech sub-audience running parallel to the car crowd.</p>';
+  [
+    {mo:'MO 1',title:'The Concept',desc:"What I'm building and why. Plant the seed."},
+    {mo:'MO 2',title:'Component Sourcing',desc:'Camera, mic, processor. Tech crowd geeks out.'},
+    {mo:'MO 3',title:'SolidWorks Design',desc:'How Claude helped with the design. The meta moment.'},
+    {mo:'MO 4',title:'First Print',desc:'What worked, what failed. Print failure content performs.'},
+    {mo:'MO 5',title:'Assembly',desc:'Components going in. Starting to look real.'},
+    {mo:'MO 6',title:'🚨 First Garage Test',desc:'THE moment. Voice → AI → planner updates live. 1M view video.'}
+  ].forEach(function(ep) {
+    html += '<div style="display:flex;gap:12px;padding:8px 0;border-top:1px solid '+C.border+';">'
+      +'<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:'+C.purple+';width:40px;flex-shrink:0;padding-top:2px;">'+ep.mo+'</div>'
+      +'<div><div style="font-weight:700;font-size:13px;">'+esc(ep.title)+'</div>'
+      +'<div style="font-size:12px;color:'+C.muted+';margin-top:2px;">'+esc(ep.desc)+'</div></div>'
+      +'</div>';
+  });
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+function renderMonthCard(month, mi) {
+  var isExpanded = expandedMonth === mi;
+  var html = '<div style="margin-bottom:12px;">';
+
+  html += '<div onclick="toggleMonth('+mi+')" style="'
+    +'background:'+(isExpanded?C.card:C.surface)+';'
+    +'border:1px solid '+(isExpanded?C.red+'66':C.border)+';'
+    +'border-radius:'+(isExpanded?'8px 8px 0 0':'8px')+';'
+    +'padding:14px 16px;cursor:pointer;'
+    +'display:flex;align-items:center;gap:14px;">';
+
+  html += '<div style="width:36px;height:36px;border-radius:6px;'
+    +'background:'+(isExpanded?C.red:C.redGlow)+';'
+    +'border:1px solid '+C.red+'44;'
+    +'display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'
+    +'<div style="font-size:9px;color:'+(isExpanded?'#fff':C.red)+';font-family:\'DM Mono\',monospace;letter-spacing:0.05em;">MO</div>'
+    +'<div style="font-size:16px;font-weight:800;color:#fff;font-family:\'DM Mono\',monospace;line-height:1;">'+month.month+'</div>'
+    +'</div>';
+
+  html += '<div style="flex:1;">'
+    +'<div style="font-weight:700;font-size:14px;">'+esc(month.title)+'</div>'
+    +'<div style="font-size:12px;color:'+C.muted+';margin-top:2px;">'+esc(month.theme)+'</div>'
+    +'</div>';
+
+  html += '<div style="display:flex;gap:4px;">';
+  month.weeks.forEach(function(w) {
+    html += '<div style="width:8px;height:8px;border-radius:50%;background:'+trackColor(w.track)+';"></div>';
+  });
+  html += '</div>';
+
+  html += '<div style="color:'+C.muted+';font-size:12px;font-family:\'DM Mono\',monospace;">'+(isExpanded?'▲':'▼')+'</div>';
+  html += '</div>';
+
+  if (isExpanded) {
+    html += '<div style="border:1px solid '+C.red+'44;border-top:none;border-radius:0 0 8px 8px;overflow:hidden;">';
+    month.weeks.forEach(function(w, wi) {
+      html += renderWeekRow(w, wi);
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function renderWeekRow(w, wi) {
+  var isKeyMoment = String(w.post).indexOf('🚨') !== -1;
+  var html = '<div style="'
+    +'padding:12px 16px;'
+    +'border-top:'+(wi>0?'1px solid '+C.border:'none')+';'
+    +'background:'+(wi%2===0?C.card:'#131313')+';'
+    +'display:flex;gap:12px;align-items:flex-start;">';
+
+  html += '<div style="flex-shrink:0;width:3px;align-self:stretch;background:'+trackColor(w.track)+';border-radius:2px;"></div>';
+
+  html += '<div style="flex:1;min-width:0;">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">'
+    +'<span style="font-weight:700;font-size:13px;">'+esc(w.post)+'</span>';
+  if (isKeyMoment) {
+    html += '<span style="font-size:11px;background:'+C.red+'33;color:'+C.red+';padding:1px 6px;border-radius:3px;font-family:\'DM Mono\',monospace;">KEY MOMENT</span>';
+  }
+  html += '</div>';
+
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'
+    +tag(w.track, trackColor(w.track))
+    +tag(w.pillar, pillarColor(w.pillar))
+    +tag(w.type)
+    +'</div>';
+
+  html += '<div style="font-size:12px;color:#aaa;line-height:1.5;">'+esc(w.desc)+'</div>';
+  html += '</div>';
+
+  html += '<div style="flex-shrink:0;text-align:right;">'
+    +'<div style="font-size:10px;font-family:\'DM Mono\',monospace;color:'+statusColor(w.status)+';">● '+statusLabel(w.status)+'</div>';
+  if (typeof w.week === 'number') {
+    html += '<div style="font-size:10px;color:'+C.muted+';font-family:\'DM Mono\',monospace;margin-top:2px;">WK '+w.week+'</div>';
+  }
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+// ─── RENDER: SEQUENCE ─────────────────────────────────────────────────────────
+function renderSequence() {
+  var html = '<div>';
+  html += '<p style="color:'+C.muted+';font-size:13px;margin:0 0 20px;line-height:1.6;">10 posts in order across 6 months. Every post covers both platforms. Tap to expand.</p>';
+  launchSequence.forEach(function(post, i) {
+    html += renderPostCard(post, i);
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderPostCard(post, i) {
+  var isExpanded = expandedPost === i;
+  var html = '<div onclick="togglePost('+i+')" style="'
+    +'background:'+(isExpanded?C.card:C.surface)+';'
+    +'border:1px solid '+(isExpanded?C.red+'66':C.border)+';'
+    +'border-radius:8px;margin-bottom:10px;overflow:hidden;cursor:pointer;">';
+
+  html += '<div style="padding:14px 16px;display:flex;align-items:center;gap:14px;">';
+  html += '<div style="width:32px;height:32px;border-radius:50%;'
+    +'background:'+(isExpanded?C.red:C.redGlow)+';'
+    +'border:1px solid '+C.red+'44;'
+    +'display:flex;align-items:center;justify-content:center;'
+    +'font-size:12px;font-weight:800;color:#fff;flex-shrink:0;'
+    +'font-family:\'DM Mono\',monospace;">'+String(post.post).padStart(2,'0')+'</div>';
+  html += '<div style="flex:1;min-width:0;">'
+    +'<div style="font-weight:700;font-size:14px;margin-bottom:4px;">'+esc(post.title)+'</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+    +tag(post.pillar, pillarColor(post.pillar))
+    +tag(post.platform, platColor(post.platform))
+    +'</div></div>';
+  html += '<div style="color:'+C.muted+';font-size:12px;flex-shrink:0;">'+(isExpanded?'▲':'▼')+'</div>';
+  html += '</div>';
+
+  if (isExpanded) {
+    html += '<div style="border-top:1px solid '+C.border+';padding:16px;">';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">'
+      +tag(post.type)+tag(post.tone)
+      +'<span style="font-family:\'DM Mono\',monospace;font-size:11px;color:'+C.red+';padding:2px 8px;border:1px solid '+C.red+'44;border-radius:3px;">📅 '+esc(post.timing)+'</span>'
+      +'</div>';
+    html += sectionLabel('Instagram Caption / Teleprompter Script');
+    html += '<div style="background:#0d0d0d;border:1px solid '+C.border+';border-radius:6px;padding:14px 16px;font-size:13px;line-height:1.7;white-space:pre-line;color:'+C.text+';margin-bottom:14px;font-family:\'DM Sans\',sans-serif;">'+esc(post.caption)+'</div>';
+    html += sectionLabel('▶ YouTube Strategy','#ff4444');
+    html += '<div style="font-size:13px;line-height:1.6;color:#bbb;border-left:2px solid #ff000044;padding-left:12px;margin-bottom:14px;">'+esc(post.youtube)+'</div>';
+    html += sectionLabel('Production Notes');
+    html += '<div style="font-size:13px;line-height:1.6;color:#aaa;font-style:italic;border-left:2px solid '+C.red+'44;padding-left:12px;">'+esc(post.notes)+'</div>';
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// ─── RENDER: PIPELINE ─────────────────────────────────────────────────────────
+function renderPipeline() {
+  var html = '<div>';
+  html += '<p style="color:'+C.muted+';font-size:13px;margin:0 0 24px;line-height:1.6;">Film once. Descript does the work. Both platforms fed from the same content every week.</p>';
+
+  html += '<div style="margin-bottom:28px;">';
+  pipeline.steps.forEach(function(s, i) {
+    html += '<div style="display:flex;gap:14px;margin-bottom:4px;">';
+    html += '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">'
+      +'<div style="width:44px;height:44px;border-radius:8px;background:'+C.card+';border:1px solid '+C.border+';display:flex;align-items:center;justify-content:center;font-size:20px;">'+s.icon+'</div>';
+    if (i < pipeline.steps.length - 1) {
+      html += '<div style="width:1px;flex:1;background:'+C.border+';margin:4px 0;min-height:12px;"></div>';
+    }
+    html += '</div>';
+    html += '<div style="background:'+C.surface+';border:1px solid '+C.border+';border-radius:8px;padding:12px 14px;flex:1;margin-bottom:4px;">'
+      +'<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:'+C.red+';letter-spacing:0.15em;margin-bottom:4px;text-transform:uppercase;">Step '+s.step+' — '+s.label+'</div>'
+      +'<div style="font-size:13px;color:#ccc;line-height:1.6;">'+esc(s.detail)+'</div>'
+      +'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Repurpose table
+  html += '<div style="background:'+C.card+';border:1px solid '+C.border+';border-radius:8px;overflow:hidden;margin-bottom:16px;">'
+    +'<div style="padding:12px 16px;border-bottom:1px solid '+C.border+';font-family:\'DM Mono\',monospace;font-size:11px;color:'+C.red+';letter-spacing:0.1em;text-transform:uppercase;">Content Repurposing Map</div>'
+    +'<div style="overflow-x:auto;">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+    +'<thead><tr style="border-bottom:1px solid '+C.border+';">';
+  ['Source','Instagram','YouTube','Effort'].forEach(function(h) {
+    html += '<th style="padding:10px 14px;text-align:left;color:'+C.muted+';font-weight:600;font-family:\'DM Mono\',monospace;font-size:11px;white-space:nowrap;">'+h+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+  pipeline.repurpose.forEach(function(r, i) {
+    html += '<tr style="border-bottom:'+(i<pipeline.repurpose.length-1?'1px solid '+C.border:'none')+';background:'+(i%2===0?'transparent':'#0d0d0d')+'">'
+      +'<td style="padding:10px 14px;font-weight:700;color:'+C.text+';white-space:nowrap;">'+esc(r.source)+'</td>'
+      +'<td style="padding:10px 14px;color:#e1306c;font-size:11px;">'+esc(r.ig)+'</td>'
+      +'<td style="padding:10px 14px;color:#ff6666;font-size:11px;">'+esc(r.yt)+'</td>'
+      +'<td style="padding:10px 14px;"><span style="color:'+(r.effort==='None'?C.green:r.effort==='Low'?C.yellow:C.accent)+';font-family:\'DM Mono\',monospace;font-size:11px;">● '+esc(r.effort)+'</span></td>'
+      +'</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Gear
+  html += '<div style="background:'+C.card+';border:1px solid '+C.border+';border-radius:8px;padding:16px;">'
+    +sectionLabel('Your Setup');
+  [
+    {item:'Camera + Lighting',role:'Talking head segments — polished, professional. Immediately stands out in a feed of shaky shop footage.'},
+    {item:'Teleprompter',role:'Caption = Script. Write once, deliver clean. No rambling. Your competitive advantage on camera.'},
+    {item:'Phone',role:'Garage and car footage — raw, handheld, authentic. The contrast with polished segments works for you.'},
+    {item:'Descript AI',role:'Long-form edit + automatic highlight extraction. Your one-person production pipeline.'}
+  ].forEach(function(g, i) {
+    html += '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:'+(i<3?'1px solid '+C.border:'none')+'">'
+      +'<div style="width:6px;height:6px;border-radius:50%;background:'+C.red+';margin-top:5px;flex-shrink:0;"></div>'
+      +'<div><div style="font-weight:700;font-size:13px;">'+esc(g.item)+'</div>'
+      +'<div style="font-size:12px;color:'+C.muted+';margin-top:2px;">'+esc(g.role)+'</div></div>'
+      +'</div>';
+  });
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+// ─── RENDER: PILLARS ──────────────────────────────────────────────────────────
+function renderPillars() {
+  var html = '<div>';
+  html += '<p style="color:'+C.muted+';font-size:13px;margin:0 0 20px;line-height:1.6;">Every post maps to a pillar. Every pillar feeds both platforms.</p>';
+
+  pillars.forEach(function(p) {
+    html += '<div style="background:'+C.surface+';border:1px solid '+C.border+';border-left:3px solid '+(PC[p.name]||C.red)+';border-radius:8px;padding:14px 16px;margin-bottom:10px;">'
+      +'<div style="font-weight:700;font-size:14px;margin-bottom:4px;">'+esc(p.name)+'</div>'
+      +'<div style="font-size:13px;color:'+C.muted+';line-height:1.5;">'+esc(p.description)+'</div>'
+      +'</div>';
+  });
+
+  // Core Principle
+  html += '<div style="margin-top:16px;background:'+C.card+';border:1px solid '+C.border+';border-radius:8px;padding:16px;margin-bottom:12px;">'
+    +sectionLabel('The Core Principle')
+    +'<p style="margin:0;font-size:13px;line-height:1.7;color:#ccc;">'
+    +'<strong style="color:'+C.text+';">Build Journey</strong> is the spine. '
+    +'<strong style="color:'+C.text+';">The Planner</strong> is the community engine. '
+    +'<strong style="color:'+C.text+';">The Boys</strong> are the heart. '
+    +'<strong style="color:'+C.text+';">AI Glasses</strong> are the hook that pulls in an audience no other car channel reaches. The contrast between day one and the final build is where the inspiration lives for everyone watching.'
+    +'</p></div>';
+
+  // Tools Positioning
+  html += '<div style="background:'+C.card+';border:1px solid '+C.border+';border-radius:8px;padding:16px;">'
+    +sectionLabel('Tools Positioning')
+    +'<p style="margin:0 0 12px;font-size:13px;line-height:1.7;color:#ccc;">'
+    +'<strong style="color:'+C.text+';">“The car build is the mission. The planner and AI glasses are just how I’m doing it smarter.”</strong>'
+    +'</p>';
+
+  [
+    {q:'When someone asks about the planner', a:'“Working on a shareable version — stay tuned.” Drop the live link as a community moment when engagement peaks. Surprise delivery of something that already works.'},
+    {q:"When someone asks you to build one for them", a:"Don’t build custom planners. Offer the template instead. On-brand, scales, keeps you focused on the build."},
+    {q:'The Hero Moment', a:'Voice into glasses mic → AI searches → planner updates in real time. Multiple angles. Boys present. Tablet visible. Caption: “I built the glasses. I built the planner. I bought the car.” Shoot this deliberately — it’s the 1M view video.'}
+  ].forEach(function(item) {
+    html += '<div style="padding:10px 0;border-top:1px solid '+C.border+';">'
+      +'<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:'+C.red+';margin-bottom:6px;">'+esc(item.q)+'</div>'
+      +'<div style="font-size:13px;color:#bbb;line-height:1.6;font-style:italic;">'+esc(item.a)+'</div>'
+      +'</div>';
+  });
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+// ─── STATE HANDLERS ───────────────────────────────────────────────────────────
+function switchTab(id) {
+  activeTab = id;
+  expandedPost = null;
+  render();
+}
+function toggleMonth(mi) {
+  expandedMonth = expandedMonth === mi ? null : mi;
+  render();
+}
+function togglePost(i) {
+  expandedPost = expandedPost === i ? null : i;
+  render();
+}
+
+// ─── MAIN RENDER ──────────────────────────────────────────────────────────────
+function render() {
+  var content = '';
+  if (activeTab === 'calendar') content = renderCalendar();
+  else if (activeTab === 'sequence') content = renderSequence();
+  else if (activeTab === 'pipeline') content = renderPipeline();
+  else if (activeTab === 'pillars') content = renderPillars();
+
+  document.getElementById('app').innerHTML =
+    renderHeader()
+    + renderTabs()
+    + '<div style="padding:20px 14px;max-width:720px;margin:0 auto;">' + content + '</div>';
+}
+
+render();
+</script>
+</body>
+</html>
