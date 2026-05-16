@@ -12,6 +12,8 @@
     html, body { margin: 0; padding: 0; }
     body { background: #0a0a0a; min-height: 100vh; font-family: 'DM Sans', sans-serif; color: #f0f0f0; padding-bottom: 60px; }
     button { font-family: inherit; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    select option { background: #161616; color: #f0f0f0; }
   </style>
 </head>
 <body>
@@ -30,6 +32,18 @@ var PC = {
   'Build Vision':'#3b82f6', 'Build Journey':'#4caf50',
   'AI Glasses':'#a855f7', '3D Printing':'#06b6d4',
   'The Boys':'#ec4899', 'Community':'#f0a500'
+};
+
+// ─── WEBHOOK ──────────────────────────────────────────────────────────────────
+var WEBHOOK_URL = 'https://YOUR_N8N_INSTANCE/webhook/pursuitbuilt-content';
+
+// ─── GENERATOR STATE ──────────────────────────────────────────────────────────
+var GEN = {
+  theme: 'car',
+  state: 'idle', // idle | loading | success | error
+  result: null,
+  error: '',
+  values: {}
 };
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
@@ -257,7 +271,8 @@ function renderTabs() {
     {id:'calendar',label:'6-Month Calendar'},
     {id:'sequence',label:'Launch Sequence'},
     {id:'pipeline',label:'Production Pipeline'},
-    {id:'pillars',label:'Content Pillars'}
+    {id:'pillars',label:'Content Pillars'},
+    {id:'generator',label:'Content Generator'}
   ];
   var html = '<div style="display:flex;border-bottom:1px solid '+C.border+';padding:0 16px;overflow-x:auto;">';
   tabs.forEach(function(t) {
@@ -583,6 +598,244 @@ function renderPillars() {
   return html;
 }
 
+// ─── RENDER: GENERATOR ────────────────────────────────────────────────────────
+function renderGenerator() {
+  var html = '<div style="max-width:600px;margin:0 auto;">';
+  var fv = GEN.values;
+  var inputStyle = 'width:100%;background:#161616;border:1px solid #2a2a2a;border-radius:4px;color:#f0f0f0;padding:10px 12px;font-size:13px;font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;';
+  var labelStyle = 'display:block;font-family:\'DM Mono\',monospace;font-size:11px;color:#888;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;';
+  var fieldWrap = 'margin-bottom:16px;';
+
+  // ── LOADING STATE ──
+  if (GEN.state === 'loading') {
+    html += '<div style="text-align:center;padding:60px 20px;">'
+      +'<div style="width:32px;height:32px;border:3px solid #2a2a2a;border-top:3px solid #C41E3A;border-radius:50%;margin:0 auto 20px;animation:spin 1s linear infinite;"></div>'
+      +'<div style="color:#f0f0f0;font-size:14px;font-weight:700;margin-bottom:6px;">Generating your script...</div>'
+      +'<div style="color:#888;font-size:12px;font-family:\'DM Mono\',monospace;">This takes 30–60 seconds</div>'
+      +'</div>';
+    return html + '</div>';
+  }
+
+  // ── SUCCESS STATE ──
+  if (GEN.state === 'success' && GEN.result) {
+    var r = GEN.result;
+    html += '<div style="background:#161616;border:1px solid #4caf5044;border-radius:8px;padding:20px;margin-bottom:16px;">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'
+      +'<div style="width:28px;height:28px;background:#4caf5022;border:1px solid #4caf5055;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#4caf50;font-size:16px;flex-shrink:0;">✓</div>'
+      +'<div style="font-weight:700;font-size:15px;color:#4caf50;">Script Generated</div>'
+      +'</div>';
+    if (r.youtube_script_url || r.instagram_caption_url) {
+      html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+      if (r.youtube_script_url) {
+        html += '<a href="'+r.youtube_script_url+'" target="_blank" rel="noopener" '
+          +'style="background:#C41E3A;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px;font-family:\'DM Mono\',monospace;letter-spacing:0.05em;display:inline-block;">'
+          +'Open YouTube Script →</a>';
+      }
+      if (r.instagram_caption_url) {
+        html += '<a href="'+r.instagram_caption_url+'" target="_blank" rel="noopener" '
+          +'style="background:#C41E3A;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px;font-family:\'DM Mono\',monospace;letter-spacing:0.05em;display:inline-block;">'
+          +'Open Instagram Caption →</a>';
+      }
+      html += '</div>';
+    } else if (r.content) {
+      html += '<div style="background:#0d0d0d;border-radius:6px;padding:16px;overflow:auto;max-height:420px;margin-bottom:0;">'
+        +'<pre style="margin:0;font-family:\'DM Mono\',monospace;font-size:11px;color:#ccc;line-height:1.7;white-space:pre-wrap;word-break:break-word;">'+esc(r.content)+'</pre>'
+        +'</div>';
+    } else {
+      html += '<div style="color:#888;font-size:13px;">Script ready. Check your n8n workflow output for delivery.</div>';
+    }
+    html += '</div>';
+    html += '<button onclick="retryGenerator()" style="background:none;border:1px solid #2a2a2a;color:#888;padding:11px 18px;border-radius:6px;cursor:pointer;font-size:13px;width:100%;font-family:\'DM Sans\',sans-serif;">Generate Another Script</button>';
+    return html + '</div>';
+  }
+
+  // ── ERROR BANNER (shows above form on error) ──
+  if (GEN.state === 'error') {
+    html += '<div style="background:rgba(196,30,58,0.08);border:1px solid #C41E3A44;border-radius:8px;padding:14px 16px;margin-bottom:20px;">'
+      +'<div style="color:#C41E3A;font-weight:700;font-size:13px;margin-bottom:4px;">Generation failed</div>'
+      +'<div style="color:#888;font-size:13px;line-height:1.5;">'+esc(GEN.error)+'</div>'
+      +'</div>';
+  }
+
+  // ── IDLE / ERROR — SHOW FORM ──
+  html += '<p style="color:#888;font-size:13px;margin:0 0 20px;line-height:1.6;">Select your content type, fill in the details, and get a complete teleprompter script, Instagram caption, YouTube title, hashtags, and Descript cues in one shot.</p>';
+
+  // Theme selector
+  html += '<div style="'+fieldWrap+'">'
+    +sectionLabel('Content Type')
+    +'<div style="display:flex;gap:8px;">'
+    +'<button onclick="switchGeneratorTheme(\'car\')" style="'
+    +'background:'+(GEN.theme==='car'?'#4caf5022':'none')+';'
+    +'border:1px solid '+(GEN.theme==='car'?'#4caf5066':'#2a2a2a')+';'
+    +'color:'+(GEN.theme==='car'?'#4caf50':'#888')+';'
+    +'padding:8px 18px;border-radius:4px;cursor:pointer;font-size:12px;'
+    +'font-family:\'DM Mono\',monospace;letter-spacing:0.06em;transition:all 0.15s;">'
+    +'Car Build</button>'
+    +'<button onclick="switchGeneratorTheme(\'tech\')" style="'
+    +'background:'+(GEN.theme==='tech'?'#a855f722':'none')+';'
+    +'border:1px solid '+(GEN.theme==='tech'?'#a855f766':'#2a2a2a')+';'
+    +'color:'+(GEN.theme==='tech'?'#a855f7':'#888')+';'
+    +'padding:8px 18px;border-radius:4px;cursor:pointer;font-size:12px;'
+    +'font-family:\'DM Mono\',monospace;letter-spacing:0.06em;transition:all 0.15s;">'
+    +'Tech & Maker</button>'
+    +'</div></div>';
+
+  // ── SHARED FIELDS ──
+  html += '<div style="'+fieldWrap+'">'
+    +'<label style="'+labelStyle+'">Topic</label>'
+    +'<input id="gen-topic" type="text" placeholder="What is this video about?" '
+    +'value="'+esc(fv['gen-topic']||'')+'" '
+    +'oninput="GEN.values[\'gen-topic\']=this.value" '
+    +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+    +'style="'+inputStyle+'"></div>';
+
+  html += '<div style="'+fieldWrap+'">'
+    +'<label style="'+labelStyle+'">Email <span style="color:#555;font-size:10px;letter-spacing:0;text-transform:none;">(for delivery)</span></label>'
+    +'<input id="gen-email" type="email" placeholder="tyronerichardson04@gmail.com" '
+    +'value="'+esc(fv['gen-email']||'')+'" '
+    +'oninput="GEN.values[\'gen-email\']=this.value" '
+    +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+    +'style="'+inputStyle+'"></div>';
+
+  html += '<div style="border-top:1px solid #2a2a2a;margin:4px 0 20px;"></div>';
+
+  // ── CAR BUILD FIELDS ──
+  if (GEN.theme === 'car') {
+    var phases = [
+      'Phase 1 — Assessment & Mechanical Baseline',
+      'Phase 2 — De-Cop & Interior Strip',
+      'Phase 3 — Engine Bay',
+      'Phase 4 — Suspension & Brakes',
+      'Phase 5 — Exterior & Wrap',
+      'Phase 6 — Interior Build-Out',
+      'Phase 7 — Smart Glasses & AI System'
+    ];
+    var savedPhase = fv['gen-phase'] || phases[0];
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">Phase</label>'
+      +'<select id="gen-phase" onchange="GEN.values[\'gen-phase\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'cursor:pointer;appearance:none;-webkit-appearance:none;">';
+    phases.forEach(function(p) {
+      html += '<option value="'+esc(p)+'"'+(p===savedPhase?' selected':'')+'>'+esc(p)+'</option>';
+    });
+    html += '</select></div>';
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;'+fieldWrap+'">'
+      +'<div><label style="'+labelStyle+'">Planned Cost</label>'
+      +'<input id="gen-planned-cost" type="text" placeholder="e.g. $340" '
+      +'value="'+esc(fv['gen-planned-cost']||'')+'" '
+      +'oninput="GEN.values[\'gen-planned-cost\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'"></div>'
+      +'<div><label style="'+labelStyle+'">Actual Cost</label>'
+      +'<input id="gen-actual-cost" type="text" placeholder="e.g. $487" '
+      +'value="'+esc(fv['gen-actual-cost']||'')+'" '
+      +'oninput="GEN.values[\'gen-actual-cost\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'"></div>'
+      +'</div>';
+
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">Parts Used <span style="color:#555;font-size:10px;letter-spacing:0;text-transform:none;">(optional)</span></label>'
+      +'<textarea id="gen-parts-used" rows="3" placeholder="Key parts — names, brands, sources" '
+      +'oninput="GEN.values[\'gen-parts-used\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'resize:vertical;">'+esc(fv['gen-parts-used']||'')+'</textarea></div>';
+
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">Surprises / Failures <span style="color:#555;font-size:10px;letter-spacing:0;text-transform:none;">(optional — gold content)</span></label>'
+      +'<textarea id="gen-what-went-wrong" rows="3" placeholder="What failed, cost more, or surprised you" '
+      +'oninput="GEN.values[\'gen-what-went-wrong\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'resize:vertical;">'+esc(fv['gen-what-went-wrong']||'')+'</textarea></div>';
+
+    var sonsVal = fv['gen-sons'] || 'no';
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">Sons Involved</label>'
+      +'<div style="display:flex;gap:8px;">'
+      +'<button onclick="toggleSons(\'yes\')" style="'
+      +'background:'+(sonsVal==='yes'?'#4caf5022':'none')+';'
+      +'border:1px solid '+(sonsVal==='yes'?'#4caf5066':'#2a2a2a')+';'
+      +'color:'+(sonsVal==='yes'?'#4caf50':'#888')+';'
+      +'padding:8px 24px;border-radius:4px;cursor:pointer;font-size:13px;'
+      +'font-family:\'DM Mono\',monospace;letter-spacing:0.04em;">Yes</button>'
+      +'<button onclick="toggleSons(\'no\')" style="'
+      +'background:'+(sonsVal==='no'?'rgba(196,30,58,0.08)':'none')+';'
+      +'border:1px solid '+(sonsVal==='no'?'#C41E3A44':'#2a2a2a')+';'
+      +'color:'+(sonsVal==='no'?'#888':'#555')+';'
+      +'padding:8px 24px;border-radius:4px;cursor:pointer;font-size:13px;'
+      +'font-family:\'DM Mono\',monospace;letter-spacing:0.04em;">No</button>'
+      +'</div></div>';
+
+  // ── TECH & MAKER FIELDS ──
+  } else {
+    var savedMonth = fv['gen-build-month'] || 'Month 1';
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">Build Month</label>'
+      +'<select id="gen-build-month" onchange="GEN.values[\'gen-build-month\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'cursor:pointer;appearance:none;-webkit-appearance:none;">';
+    [
+      {val:'Month 1',label:'Month 1 — The Concept'},
+      {val:'Month 2',label:'Month 2 — Component Sourcing'},
+      {val:'Month 3',label:'Month 3 — SolidWorks Design'},
+      {val:'Month 4',label:'Month 4 — First Print'},
+      {val:'Month 5',label:'Month 5 — Assembly'},
+      {val:'Month 6',label:'Month 6 — First Garage Test'}
+    ].forEach(function(m) {
+      html += '<option value="'+esc(m.val)+'"'+(m.val===savedMonth?' selected':'')+'>'+esc(m.label)+'</option>';
+    });
+    html += '</select></div>';
+
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">Components Discussed <span style="color:#555;font-size:10px;letter-spacing:0;text-transform:none;">(optional)</span></label>'
+      +'<textarea id="gen-components" rows="3" placeholder="e.g. Pi Zero 2W, SolidWorks housing v2, PLA+ filament, camera module" '
+      +'oninput="GEN.values[\'gen-components\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'resize:vertical;">'+esc(fv['gen-components']||'')+'</textarea></div>';
+
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">What Failed <span style="color:#555;font-size:10px;letter-spacing:0;text-transform:none;">(optional — top-performing content)</span></label>'
+      +'<textarea id="gen-what-failed" rows="3" placeholder="Failed prints, wrong components, design flaws mid-build" '
+      +'oninput="GEN.values[\'gen-what-failed\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'resize:vertical;">'+esc(fv['gen-what-failed']||'')+'</textarea></div>';
+
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">How Claude Helped <span style="color:#555;font-size:10px;letter-spacing:0;text-transform:none;">(optional)</span></label>'
+      +'<textarea id="gen-claude-involvement" rows="3" placeholder="What did you use Claude for in this phase?" '
+      +'oninput="GEN.values[\'gen-claude-involvement\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'resize:vertical;">'+esc(fv['gen-claude-involvement']||'')+'</textarea></div>';
+
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">Where Claude Got It Wrong <span style="color:#555;font-size:10px;letter-spacing:0;text-transform:none;">(optional)</span></label>'
+      +'<textarea id="gen-claude-wrong" rows="3" placeholder="Where AI assistance fell short or needed correction" '
+      +'oninput="GEN.values[\'gen-claude-wrong\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'resize:vertical;">'+esc(fv['gen-claude-wrong']||'')+'</textarea></div>';
+
+    html += '<div style="'+fieldWrap+'">'
+      +'<label style="'+labelStyle+'">How This Connects Back to the Car <span style="color:#C41E3A;font-size:10px;letter-spacing:0;text-transform:none;">(required)</span></label>'
+      +'<textarea id="gen-car-connection" rows="3" placeholder="Specific moment in the build this enables — be precise" '
+      +'oninput="GEN.values[\'gen-car-connection\']=this.value" '
+      +'onfocus="this.style.borderColor=\'#C41E3A\'" onblur="this.style.borderColor=\'#2a2a2a\'" '
+      +'style="'+inputStyle+'resize:vertical;">'+esc(fv['gen-car-connection']||'')+'</textarea></div>';
+  }
+
+  // Submit button
+  html += '<button onclick="submitGenerator()" style="'
+    +'background:#C41E3A;color:#fff;border:none;'
+    +'width:100%;padding:14px;border-radius:6px;'
+    +'font-size:13px;font-weight:700;font-family:\'DM Mono\',monospace;'
+    +'letter-spacing:0.12em;cursor:pointer;margin-top:4px;'
+    +'">GENERATE SCRIPT</button>';
+
+  html += '</div>';
+  return html;
+}
+
 // ─── STATE HANDLERS ───────────────────────────────────────────────────────────
 function switchTab(id) {
   activeTab = id;
@@ -597,6 +850,77 @@ function togglePost(i) {
   expandedPost = expandedPost === i ? null : i;
   render();
 }
+function switchGeneratorTheme(t) {
+  GEN.theme = t;
+  GEN.state = GEN.state === 'success' ? 'idle' : GEN.state;
+  render();
+}
+function toggleSons(val) {
+  GEN.values['gen-sons'] = val;
+  render();
+}
+function retryGenerator() {
+  GEN.state = 'idle';
+  GEN.result = null;
+  GEN.error = '';
+  render();
+}
+function submitGenerator() {
+  var v = GEN.values;
+  var topic = (v['gen-topic'] || '').trim();
+  if (!topic) {
+    GEN.state = 'error';
+    GEN.error = 'Topic is required before generating.';
+    render();
+    return;
+  }
+  var payload = { theme: GEN.theme, topic: topic, email: v['gen-email'] || '' };
+  if (GEN.theme === 'car') {
+    payload.phase = v['gen-phase'] || 'Phase 1 — Assessment & Mechanical Baseline';
+    payload.planned_cost = v['gen-planned-cost'] || '';
+    payload.actual_cost = v['gen-actual-cost'] || '';
+    payload.parts_used = v['gen-parts-used'] || '';
+    payload.what_went_wrong = v['gen-what-went-wrong'] || '';
+    payload.sons_involved = v['gen-sons'] || 'no';
+  } else {
+    payload.build_month = v['gen-build-month'] || 'Month 1';
+    payload.components_discussed = v['gen-components'] || '';
+    payload.what_failed = v['gen-what-failed'] || '';
+    payload.claude_involvement = v['gen-claude-involvement'] || '';
+    payload.claude_got_wrong = v['gen-claude-wrong'] || '';
+    payload.car_connection = v['gen-car-connection'] || '';
+  }
+  GEN.state = 'loading';
+  GEN.result = null;
+  GEN.error = '';
+  render();
+  var controller = new AbortController();
+  var timeout = setTimeout(function() { controller.abort(); }, 120000);
+  fetch(WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: controller.signal
+  })
+  .then(function(r) {
+    clearTimeout(timeout);
+    if (!r.ok) throw new Error('Server responded with ' + r.status);
+    return r.json();
+  })
+  .then(function(data) {
+    GEN.state = 'success';
+    GEN.result = data;
+    render();
+  })
+  .catch(function(err) {
+    clearTimeout(timeout);
+    GEN.state = 'error';
+    GEN.error = err.name === 'AbortError'
+      ? 'Request timed out after 2 minutes. The workflow may still be running — check n8n.'
+      : (err.message || 'Something went wrong. Please try again.');
+    render();
+  });
+}
 
 // ─── MAIN RENDER ──────────────────────────────────────────────────────────────
 function render() {
@@ -605,6 +929,7 @@ function render() {
   else if (activeTab === 'sequence') content = renderSequence();
   else if (activeTab === 'pipeline') content = renderPipeline();
   else if (activeTab === 'pillars') content = renderPillars();
+  else if (activeTab === 'generator') content = renderGenerator();
 
   document.getElementById('app').innerHTML =
     renderHeader()
